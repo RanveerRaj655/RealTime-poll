@@ -1,65 +1,200 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient"
+import { Plus, X, BarChart3, Zap } from "lucide-react";
+
+export default function HomePage() {
+  const router = useRouter();
+  const [question, setQuestion] = useState("");
+  const [options, setOptions] = useState(["", ""]);
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState("");
+
+  const addOption = () => {
+    if (options.length < 10) {
+      setOptions([...options, ""]);
+    }
+  };
+
+  const removeOption = (index: number) => {
+    if (options.length > 2) {
+      setOptions(options.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateOption = (index: number, value: string) => {
+    const newOptions = [...options];
+    newOptions[index] = value;
+    setOptions(newOptions);
+  };
+
+  const createPoll = async () => {
+    setError("");
+
+    // Validation
+    if (!question.trim()) {
+      setError("Please enter a question");
+      return;
+    }
+
+    const validOptions = options.filter((opt) => opt.trim());
+    if (validOptions.length < 2) {
+      setError("Please provide at least 2 options");
+      return;
+    }
+
+    setIsCreating(true);
+
+    try {
+      // Create poll
+      const { data: poll, error: pollError } = await supabase
+        .from("polls")
+        .insert({ question: question.trim() })
+        .select()
+        .single();
+
+      if (pollError) throw pollError;
+
+      // Create options
+      const optionsData = validOptions.map((text) => ({
+        poll_id: poll.id,
+        text: text.trim(),
+        votes_count: 0,
+      }));
+
+      const { error: optionsError } = await supabase
+        .from("options")
+        .insert(optionsData);
+
+      if (optionsError) throw optionsError;
+
+      // Redirect to poll page
+      router.push(`/poll/${poll.id}`);
+    } catch (err) {
+      console.error("Error creating poll:", err);
+      setError("Failed to create poll. Please try again.");
+      setIsCreating(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Hero Section */}
+      <div className="text-center mb-12 animate-fade-in">
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <BarChart3 className="w-12 h-12 text-blue-600" />
+          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            PollSync
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+        <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+          Create instant polls and watch results update in real-time
+        </p>
+        <div className="flex items-center justify-center gap-6 mt-6 text-sm text-slate-500">
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-yellow-500" />
+            <span>Real-time updates</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-blue-500" />
+            <span>Live results</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Poll Creation Form */}
+      <div className="w-full max-w-2xl card p-8 animate-slide-up">
+        <h2 className="text-2xl font-bold mb-6 text-slate-800">
+          Create a New Poll
+        </h2>
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+            {error}
+          </div>
+        )}
+
+        <div className="space-y-6">
+          {/* Question Input */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Your Question
+            </label>
+            <input
+              type="text"
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder="What's your favorite programming language?"
+              className="input-field"
+              maxLength={200}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </div>
+
+          {/* Options */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Answer Options
+            </label>
+            <div className="space-y-3">
+              {options.map((option, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={option}
+                    onChange={(e) => updateOption(index, e.target.value)}
+                    placeholder={`Option ${index + 1}`}
+                    className="input-field"
+                    maxLength={100}
+                  />
+                  {options.length > 2 && (
+                    <button
+                      onClick={() => removeOption(index)}
+                      className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                      type="button"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {options.length < 10 && (
+              <button
+                onClick={addOption}
+                className="mt-3 flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors"
+                type="button"
+              >
+                <Plus className="w-4 h-4" />
+                Add Option
+              </button>
+            )}
+          </div>
+
+          {/* Create Button */}
+          <button
+            onClick={createPoll}
+            disabled={isCreating}
+            className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Documentation
-          </a>
+            {isCreating ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Creating...
+              </span>
+            ) : (
+              "Create Poll"
+            )}
+          </button>
         </div>
-      </main>
+      </div>
+
+      {/* Footer */}
+      <div className="mt-12 text-center text-sm text-slate-500">
+        <p>Share your poll link and watch votes come in live ✨</p>
+      </div>
     </div>
   );
 }
