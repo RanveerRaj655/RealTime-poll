@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { Share2, Check, Home, Users, TrendingUp } from "lucide-react";
+import { Share2, Check, Home, Users, TrendingUp, BarChart3 } from "lucide-react";
 
 type Option = {
   id: string;
@@ -168,7 +168,7 @@ export default function PollPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white via-blue-50 to-white">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-slate-600">Loading poll...</p>
@@ -179,16 +179,16 @@ export default function PollPage() {
 
   if (error && !poll) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-        <div className="bg-white rounded-2xl shadow-lg p-8 text-center max-w-md">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-white via-blue-50 to-white">
+        <div className="bg-white rounded-2xl shadow-md border border-blue-100 p-8 text-center max-w-md">
           <div className="text-6xl mb-4">😕</div>
-          <h2 className="text-2xl font-bold mb-2">Poll Not Found</h2>
+          <h2 className="text-2xl font-bold mb-2 text-slate-900">Poll Not Found</h2>
           <p className="text-slate-600 mb-6">{error}</p>
           <button
             onClick={() => router.push("/")}
-            className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700"
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium transition-colors"
           >
-            Create a New Poll
+            View Other Polls
           </button>
         </div>
       </div>
@@ -196,43 +196,60 @@ export default function PollPage() {
   }
 
   return (
-    <div className="min-h-screen p-4 py-8 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="max-w-3xl mx-auto">
-
-        {/* Back Button */}
-        <button
-          onClick={() => router.push("/")}
-          className="text-slate-600 hover:text-slate-900 mb-6 flex items-center gap-2"
-        >
-          <Home className="w-4 h-4" />
-          Create New Poll
-        </button>
-
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 mb-8 flex-wrap">
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">
-              {poll?.question}
-            </h1>
-            <div className="flex items-center gap-4 text-sm text-slate-500">
-              <div className="flex items-center gap-1">
-                <Users className="w-4 h-4" />
-                <span>{totalVotes} {totalVotes === 1 ? "vote" : "votes"}</span>
-              </div>
-              {hasVoted && (
-                <div className="flex items-center gap-1 text-green-600">
-                  <Check className="w-4 h-4" />
-                  <span>You voted</span>
-                </div>
-              )}
-            </div>
-          </div>
+    <div className="min-h-screen p-4 py-8 bg-gradient-to-b from-white via-blue-50 to-white">
+      {/* Navigation Header */}
+      <div className="bg-white border-b border-blue-100 fixed top-0 left-0 right-0 z-50">
+        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
           <button
-            onClick={copyShareLink}
-            className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm hover:bg-slate-50"
+            onClick={() => router.push("/")}
+            className="text-slate-600 hover:text-slate-900 flex items-center gap-2 font-medium transition-colors"
           >
-            {copied ? <><Check className="w-4 h-4" />Copied!</> : <><Share2 className="w-4 h-4" />Share</>}
+            <Home className="w-4 h-4" />
+            Back
           </button>
+          <div className="flex items-center gap-2 text-blue-600">
+            <BarChart3 className="w-4 h-4" />
+            <span className="text-sm font-medium">PollSync</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-3xl mx-auto mt-20">
+        {/* Header */}
+        <div className="mb-8 animate-fade-in">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+            {poll?.question}
+          </h1>
+          <div className="flex items-center gap-6 flex-wrap">
+            <div className="flex items-center gap-2 text-slate-600">
+              <Users className="w-5 h-5 text-blue-600" />
+              <span className="font-medium">
+                {totalVotes} {totalVotes === 1 ? "vote" : "votes"}
+              </span>
+            </div>
+            {hasVoted && (
+              <div className="flex items-center gap-2 text-green-600 font-medium">
+                <Check className="w-5 h-5" />
+                <span>You voted</span>
+              </div>
+            )}
+            <button
+              onClick={copyShareLink}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-blue-600 font-medium transition-colors ml-auto"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-4 h-4" />
+                  Share
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Error */}
@@ -243,7 +260,7 @@ export default function PollPage() {
         )}
 
         {/* Options */}
-        <div className="space-y-3">
+        <div className="space-y-3 mb-8">
           {options.map((option) => {
             const percentage =
               totalVotes > 0
@@ -258,46 +275,55 @@ export default function PollPage() {
                   isSelected
                     ? "border-blue-500 bg-blue-50"
                     : hasVoted
-                    ? "border-slate-200 bg-white"
-                    : "border-slate-200 bg-white hover:border-blue-400"
+                    ? "border-blue-100 bg-white"
+                    : "border-blue-200 bg-white hover:border-blue-400 hover:shadow-md cursor-pointer"
                 }`}
               >
                 {/* Progress bar */}
                 {hasVoted && totalVotes > 0 && (
                   <div
-                    className="absolute left-0 top-0 h-full bg-blue-100 transition-all duration-700 ease-out"
+                    className="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-100 to-blue-50 transition-all duration-700 ease-out"
                     style={{ width: `${percentage}%` }}
                   />
                 )}
 
-                <div className="relative flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                <div className="relative flex items-center justify-between gap-4 flex-wrap">
+                  <div className="flex items-center gap-3 flex-1">
                     {!hasVoted ? (
                       <button
                         onClick={() => submitVote(option.id)}
                         disabled={voting}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
+                        className="flex-shrink-0 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors disabled:cursor-not-allowed"
                       >
                         {voting ? "..." : "Vote"}
                       </button>
                     ) : (
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        isSelected ? "bg-blue-600 text-white" : "bg-slate-100"
-                      }`}>
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          isSelected
+                            ? "bg-blue-600 text-white"
+                            : "bg-blue-100"
+                        }`}
+                      >
                         {isSelected && <Check className="w-4 h-4" />}
                       </div>
                     )}
-                    <span className="font-medium text-slate-800">{option.text}</span>
+                    <span className="font-medium text-slate-800">
+                      {option.text}
+                    </span>
                   </div>
 
                   {hasVoted && (
-                    <div className="flex items-center gap-3 text-right">
-                      <span className="text-sm text-slate-500">
-                        {option.votes_count} {option.votes_count === 1 ? "vote" : "votes"}
-                      </span>
-                      <span className="text-base font-bold text-blue-600 w-12 text-right">
-                        {percentage}%
-                      </span>
+                    <div className="flex items-center gap-3 text-right flex-shrink-0">
+                      <div>
+                        <div className="text-sm font-semibold text-blue-600">
+                          {percentage}%
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {option.votes_count}{" "}
+                          {option.votes_count === 1 ? "vote" : "votes"}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -306,16 +332,18 @@ export default function PollPage() {
           })}
         </div>
 
-        {/* Status */}
-        <div className={`mt-6 p-4 rounded-xl text-center text-sm border ${
-          hasVoted
-            ? "bg-green-50 border-green-200 text-green-700"
-            : "bg-blue-50 border-blue-200 text-blue-700"
-        }`}>
+        {/* Status Bar */}
+        <div
+          className={`p-4 rounded-xl text-center text-sm border animate-fade-in ${
+            hasVoted
+              ? "bg-green-50 border-green-200 text-green-700"
+              : "bg-blue-50 border-blue-200 text-blue-700"
+          }`}
+        >
           {voting && (
             <span className="flex items-center justify-center gap-2">
               <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-              Submitting...
+              Submitting your vote...
             </span>
           )}
           {!hasVoted && !voting && (
@@ -327,11 +355,10 @@ export default function PollPage() {
           {hasVoted && !voting && (
             <span className="flex items-center justify-center gap-2">
               <Check className="w-4 h-4" />
-              Vote recorded • Watch results update live
+              Thank you for voting! Results update live
             </span>
           )}
         </div>
-
       </div>
     </div>
   );
